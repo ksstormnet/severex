@@ -1,0 +1,8 @@
+{
+  "name": "severex",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/ksstormnet/severex",
+  "author": "KSStormInfo <dev@ksstorm.net>",
+  "license": "MIT"
+}
