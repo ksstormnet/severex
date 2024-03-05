@@ -2,40 +2,47 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { existsSync } from 'fs';
 import Database from 'better-sqlite3';
 
-const dbName = './severex.db';
+const dbName = './serverex.db';
 
-interface TestRow {
- id: number;
- name: string;
+interface UserRow {
+  id: number;
+  twitter_handle: string;
 }
 
 describe('SQLite Database', () => {
-let db = new Database(dbName, { verbose: console.log });
+  let db = new Database(dbName, { verbose: console.log });
 
-beforeAll(() => {
-    // Check if the database file exists
+  beforeAll(() => {
+    // Ensure the database exists
     expect(existsSync(dbName)).toBe(true);
-    // Open the database for further operations
+    // Initialize the database
     db = new Database(dbName, { verbose: console.log });
-});
+    // Run migration (including Users table creation for this example)
+    const createUsersTable = `
+      CREATE TABLE IF NOT EXISTS Users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        twitter_handle TEXT UNIQUE NOT NULL
+      );`;
+    db.exec(createUsersTable);
+  });
 
-  it('should allow data insertion', () => {
- // Attempt to create a table and insert data
-    const createTable = db.prepare('CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)').run();
-    expect(createTable).toBeDefined();
-
-    const insert = db.prepare('INSERT INTO test (name) VALUES (?)').run('Test Name');
+  it('should allow user data insertion and retrieval', () => {
+    // Insert data into Users table
+    const insert = db.prepare('INSERT INTO Users (twitter_handle) VALUES (?)').run('@exampleUser');
     expect(insert.lastInsertRowid).toBeDefined();
 
     // Verify data insertion
-    const row = db.prepare('SELECT * FROM test WHERE id = ?').get(insert.lastInsertRowid) as TestRow;
+    const row = db.prepare('SELECT * FROM Users WHERE id = ?').get(insert.lastInsertRowid) as UserRow;
     expect(row).toBeDefined();
-    expect(row.name).toBe('Test Name');
- });
+    expect(row.twitter_handle).toBe('@exampleUser');
+  });
+
+  // Add more tests here for CRUD operations on Users, Triggers, etc.
 
   afterAll(() => {
-    // Clean up: delete test data and close the database
-    db.prepare('DROP TABLE IF EXISTS test').run();
+    // Clean up: drop tables and close the database
+    db.prepare('DROP TABLE IF EXISTS Users').run();
+    // Add drop statements for other tables as needed
     db.close();
   });
 });
